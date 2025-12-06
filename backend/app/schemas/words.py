@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional, List
 
 
@@ -17,10 +17,8 @@ class WordOut(BaseModel):
     translation_es: str | None
     translation_fr: str | None
 
-    class Config:
-        orm_mode = True
-
-
+    model_config = ConfigDict(from_attributes=True)
+    
 class DailyWordsResponse(BaseModel):
     date: str
     count: int

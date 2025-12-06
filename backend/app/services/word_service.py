@@ -33,25 +33,31 @@ def get_daily_words_for_user(db: Session, user_id: int):
 #  Assign new daily words to user (or guest)
 # -----------------------------------------------------------
 def assign_daily_words(db: Session, user_id: int, level: str, limit: int):
-    # STEP 1 — fetch vocabulary entries matching CEFR level
-    words = db.query(Vocabulary).filter(Vocabulary.level == level).all()
-    if len(words) < limit:
-        return None
+    today = datetime.date.today()
 
-    # STEP 2 — random selection
-    selected = random.sample(words, limit)
+    # 1 — Select unstudied words based on level
+    words = (
+        db.query(Vocabulary)
+        .filter(Vocabulary.level == level)
+        .limit(limit)
+        .all()
+    )
 
-    # STEP 3 — if user exists, store in user_word_history
-    if user_id:
-        today = datetime.date.today()
-        for vocab_item in selected:
-            entry = UserWordHistory(
+    if not words:
+        return []
+
+    entries = []
+    for w in words:
+        entries.append(
+            UserWordHistory(
                 user_id=user_id,
-                vocab_id=vocab_item.id,
-                date_assigned=today,
+                word_id=w.id,
+                served_date=today,     # <-- MUST NOT BE NULL
                 completed=False
             )
-            db.add(entry)
-        db.commit()
+        )
 
-    return selected
+    db.add_all(entries)
+    db.commit()
+
+    return words

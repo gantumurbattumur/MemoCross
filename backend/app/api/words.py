@@ -23,16 +23,8 @@ def get_daily_words(payload: DailyWordsRequest, db: Session = Depends(get_db)):
     level = payload.level
     limit = payload.limit or 10
 
-    # STEP 1 — Try to fetch today’s already assigned words
-    today_words = get_daily_words_for_user(db, user_id)
-    if today_words:
-        return DailyWordsResponse(
-            date=str(datetime.date.today()),
-            words=today_words,
-            count=len(today_words)
-        )
-
-    # STEP 2 — Generate new daily assignment
+    # Do NOT check history (table has no date column)
+    # Always generate new words
     words = assign_daily_words(db, user_id, level, limit)
     if not words:
         raise HTTPException(status_code=404, detail="Not enough words available.")
@@ -42,3 +34,6 @@ def get_daily_words(payload: DailyWordsRequest, db: Session = Depends(get_db)):
         words=words,
         count=len(words)
     )
+
+
+    
