@@ -8,7 +8,7 @@ export default function LoginPage() {
       <div className="bg-white shadow-lg rounded-2xl p-10 w-full max-w-lg text-center">
 
         <h1 className="text-4xl font-extrabold mb-4">
-          Sign in to MemoCross
+          Sign in to EaseeVocab
         </h1>
 
         <p className="text-gray-600 mb-10">

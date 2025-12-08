@@ -1,7 +1,7 @@
 export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center h-screen text-center px-4">
-      <h1 className="text-4xl font-bold mb-6">Welcome to MemoCross</h1>
+      <h1 className="text-4xl font-bold mb-6">Welcome to EaseeVocab</h1>
       <p className="text-lg mb-4">Learn faster with sound-a-like words + AI-generated puzzles.</p>
       <p className="text-gray-600 mb-8 text-base">
         No sign-up required! Start learning immediately, or sign in to track your progress.

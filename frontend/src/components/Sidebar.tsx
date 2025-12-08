@@ -9,6 +9,7 @@ interface MenuItem {
   href: string;
   icon: string;
   locked?: boolean;
+  tooltip?: string;
 }
 
 export default function Sidebar() {
@@ -56,16 +57,32 @@ export default function Sidebar() {
       locked: false,
     },
     {
+      name: "Connection",
+      href: "/games/connection",
+      icon: "🔗",
+      locked: true,
+      tooltip: "Coming soon",
+    },
+    {
+      name: "Wordle",
+      href: "/games/wordle",
+      icon: "🎯",
+      locked: true,
+      tooltip: "Coming soon",
+    },
+    {
       name: "Streak",
       href: "/stats/streak",
       icon: "🔥",
       locked: true,
+      tooltip: "Feature improvement",
     },
     {
       name: "Leaderboard",
       href: "/stats/leaderboard",
       icon: "🏆",
       locked: true,
+      tooltip: "Feature improvement",
     },
   ];
 
@@ -96,10 +113,12 @@ export default function Sidebar() {
                   <span className="flex-1">{item.name}</span>
                   <span className="text-sm">🔒</span>
                   {/* Tooltip */}
-                  <div className="absolute left-full ml-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
-                    Feature improvement
-                    <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-800"></div>
-                  </div>
+                  {item.tooltip && (
+                    <div className="absolute left-full ml-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                      {item.tooltip}
+                      <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-800"></div>
+                    </div>
+                  )}
                 </div>
               );
             }

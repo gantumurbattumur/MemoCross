@@ -3,12 +3,12 @@ version: "3.9"
 services:
   db:
     image: postgres:15
-    container_name: memocross-db
+    container_name: easeevocab-db
     restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: memocross
+      POSTGRES_DB: easeevocab
     ports:
       - "5432:5432"
     volumes:

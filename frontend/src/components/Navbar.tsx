@@ -22,7 +22,7 @@ export default function Navbar() {
     <nav className="w-full bg-white shadow-sm h-14 flex items-center px-6 fixed top-0 left-0 z-50">
       <div className="flex justify-between w-full">
         <Link href="/" className="text-xl font-bold text-green-600">
-          MemoCross
+          EaseeVocab
         </Link>
 
         <div className="flex gap-6 text-gray-700 font-medium items-center">

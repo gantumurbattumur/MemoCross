@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = FastAPI(
-    title="MemoCross API",
+    title="EaseeVocab API",
     description="API for vocabulary learning with crosswords and mnemonics",
     version="1.0.0"
 )
@@ -39,4 +39,4 @@ app.include_router(mnemonic.router)
 @app.get("/")
 def root():
     """Root endpoint to verify API is running."""
-    return {"message": "MemoCross API running"}
+    return {"message": "EaseeVocab API running"}

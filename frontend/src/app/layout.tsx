@@ -4,8 +4,8 @@ import Script from "next/script";
 import React from "react";
 
 export const metadata = {
-  title: "MemoCross",
-  description: "AI Flashcards powered with memory",
+  title: "EaseeVocab",
+  description: "AI Flashcards powered with memory - Learn vocabulary with ease",
 };
 
 export default function RootLayout({
