@@ -1,39 +1,64 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-import datetime
-
+from datetime import date
 from app.core.db import get_db
-from app.schemas.words import DailyWordsRequest, DailyWordsResponse, WordOut
-from app.services.word_service import (
-    get_daily_words_for_user,
-    assign_daily_words,
-)
-
+from app.models.vocabulary import Vocabulary
+from app.models.user_word_history import UserWordHistory
+from typing import Optional
+from app.core.security import optional_access_token
+from sqlalchemy import func
 router = APIRouter(prefix="/words", tags=["Words"])
 
 
-# ------------------------------------------------------------
-#  POST /words/daily
-#  Returns daily batch of words (default: 10)
-# ------------------------------------------------------------
-@router.post("/daily", response_model=DailyWordsResponse)
-def get_daily_words(payload: DailyWordsRequest, db: Session = Depends(get_db)):
+@router.post("/daily")
+def get_daily_words(
+    db: Session = Depends(get_db),
+    user: Optional[dict] = Depends(optional_access_token)   # <---- HERE
+):
 
-    user_id = payload.user_id
-    level = payload.level
-    limit = payload.limit or 10
+    # Not logged in -> just return random
+    if user is None:
+        return (
+            db.query(Vocabulary)
+            .order_by(func.random())
+            .limit(10)
+            .all()
+        )
 
-    # Do NOT check history (table has no date column)
-    # Always generate new words
-    words = assign_daily_words(db, user_id, level, limit)
-    if not words:
-        raise HTTPException(status_code=404, detail="Not enough words available.")
+    user_id = user["user_id"]
 
-    return DailyWordsResponse(
-        date=str(datetime.date.today()),
-        words=words,
-        count=len(words)
+    # Check today's saved words
+    history = (
+        db.query(UserWordHistory)
+        .filter(
+            UserWordHistory.user_id == user_id,
+            UserWordHistory.served_date == date.today()
+        )
+        .all()
     )
 
+    if history:
+        return [
+            db.query(Vocabulary).filter(Vocabulary.id == h.word_id).first()
+            for h in history
+        ]
 
-    
+    words = (
+        db.query(Vocabulary)
+        .order_by(func.random())
+        .limit(10)
+        .all()
+    )
+
+    # Save history
+    for w in words:
+        db.add(UserWordHistory(
+            user_id=user_id,
+            word_id=w.id,
+            served_date=date.today(),
+            completed=False
+        ))
+
+    db.commit()
+
+    return words

@@ -1,85 +1,135 @@
-import random
-from typing import List, Tuple, Dict, Any
-
-from app.models.vocabulary import Vocabulary
-from sqlalchemy.orm import Session
-
-
-# ----------------------------------------------------------
-# SIMPLE CROSSWORD GENERATOR (MVP VERSION)
-# ----------------------------------------------------------
-def generate_crossword(words: List[str]) -> Tuple[List[List[str]], List[dict], Dict[str, str]]:
+def generate_crossword(words):
     """
-    Very simple crossword generator:
-    - creates a 15x15 grid
-    - places words horizontally one per row
-    - future: improved algorithm with intersections
+    words = [
+      { "word": "ABOVE", "clue": "..." },
+      { "word": "ACTION", "clue": "..." },
+      ...
+    ]
+
+    returns:
+    {
+      "grid": [...],
+      "placements": [...]
+    }
     """
 
-    size = 15
-    grid = [[" " for _ in range(size)] for _ in range(size)]
+    SIZE = 10
+    grid = [["" for _ in range(SIZE)] for _ in range(SIZE)]
     placements = []
-    clues = {}
 
-    # Shuffle for randomness
-    random.shuffle(words)
+    def can_place_horizontal(word, row, col):
+        if col + len(word) > SIZE:
+            return False
+        for i, ch in enumerate(word):
+            if grid[row][col + i] not in ("", ch):
+                return False
+        return True
 
-    row = 0
-    for word in words:
-        if len(word) > size:
-            continue
+    def can_place_vertical(word, row, col):
+        if row + len(word) > SIZE:
+            return False
+        for i, ch in enumerate(word):
+            if grid[row + i][col] not in ("", ch):
+                return False
+        return True
 
-        # place word horizontally
-        start_col = random.randint(0, size - len(word))
-
-        for i, letter in enumerate(word):
-            grid[row][start_col + i] = letter
-
+    def place_horizontal(word, row, col):
+        for i, ch in enumerate(word):
+            grid[row][col + i] = ch
         placements.append({
             "word": word,
             "row": row,
-            "col": start_col,
-            "direction": "across"
+            "col": col,
+            "direction": "ACROSS"
         })
 
-        row += 2
-        if row >= size:
-            break
+    def place_vertical(word, row, col):
+        for i, ch in enumerate(word):
+            grid[row + i][col] = ch
+        placements.append({
+            "word": word,
+            "row": row,
+            "col": col,
+            "direction": "DOWN"
+        })
 
-    # Clues (use definitions)
-    # For MVP, we only create blank clues; API caller fills them
-    for word in words:
-        clues[word] = f"Definition for '{word}'"
+    # place first word in the center horizontally
+    first = words[0]["word"]
+    start_col = (SIZE - len(first)) // 2
+    start_row = SIZE // 2
+    place_horizontal(first, start_row, start_col)
 
-    return grid, placements, clues
+    # place remaining
+    for w in words[1:]:
+        word = w["word"]
+        placed = False
 
+        # try intersections first
+        for p in placements:
+            pw = p["word"]
 
-# ----------------------------------------------------------
-# CHECK CROSSWORD ANSWERS
-# ----------------------------------------------------------
-def check_crossword_answers(payload):
-    user_answers = payload.answers
-    solution = payload.solution
+            for i, ch1 in enumerate(word):
+                for j, ch2 in enumerate(pw):
+                    if ch1 != ch2:
+                        continue
 
-    correct = []
-    wrong = []
+                    # intersection location
+                    if p["direction"] == "ACROSS":
+                        row = p["row"] - i
+                        col = p["col"] + j
 
-    for word, user_answer in user_answers.items():
-        if word not in solution:
-            continue
-        if user_answer.strip().lower() == solution[word].strip().lower():
-            correct.append(word)
-        else:
-            wrong.append(word)
+                        if 0 <= row < SIZE and 0 <= col < SIZE:
+                            if can_place_vertical(word, row, col):
+                                place_vertical(word, row, col)
+                                placed = True
+                                break
 
-    total = len(solution)
-    correct_count = len(correct)
-    accuracy = correct_count / total if total else 0
+                    else:  # DOWN
+                        row = p["row"] + j
+                        col = p["col"] - i
+
+                        if 0 <= row < SIZE and 0 <= col < SIZE:
+                            if can_place_horizontal(word, row, col):
+                                place_horizontal(word, row, col)
+                                placed = True
+                                break
+
+                if placed:
+                    break
+            if placed:
+                break
+
+        # fallback: place vertically anywhere
+        if not placed:
+            for r in range(SIZE):
+                for c in range(SIZE):
+                    if can_place_vertical(word, r, c):
+                        place_vertical(word, r, c)
+                        placed = True
+                        break
+                if placed:
+                    break
+
+    # FINAL PROCESSING – return structured grid
+    output_grid = []
+    for r in range(SIZE):
+        row = []
+        for c in range(SIZE):
+            cell = grid[r][c]
+            if cell == "":
+                row.append({
+                    "letter": None,
+                    "is_block": True
+                })
+            else:
+                row.append({
+                    "letter": cell,
+                    "is_block": False,
+                    "input": ""
+                })
+        output_grid.append(row)
 
     return {
-        "correct_count": correct_count,
-        "total": total,
-        "accuracy": accuracy,
-        "correct_words": correct,
-        "wrong_words": wrong,
+        "grid": output_grid,
+        "placements": placements
     }

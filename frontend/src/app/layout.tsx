@@ -1,20 +1,20 @@
 import "./globals.css";
-import Script from "next/script";
-import type { Metadata } from "next";
+import Navbar from "@/components/Navbar";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "MemoCross",
-  description: "Mnemonic-based AI language learning",
+  description: "AI Flashcards powered with memory",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      {/* Google Identity */}
-      <Script src="https://accounts.google.com/gsi/client" strategy="beforeInteractive" />
+      <body className="bg-gray-50 text-gray-900 antialiased font-sans">
+        <Navbar />
 
-      <body className="bg-gray-50 text-gray-900">
-        {children}
+        <main className="pt-16">
+          {children}
+        </main>
       </body>
     </html>
   );

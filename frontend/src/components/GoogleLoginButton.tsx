@@ -14,9 +14,9 @@ export default function GoogleLoginButton() {
 
     window.google.accounts.id.renderButton(
       document.getElementById("google-login"),
-      { theme: "outline", size: "large", width: "300" }
+      { theme: "outline", size: "large", width: "280" }
     );
   }, []);
 
-  return <div id="google-login"></div>;
+  return <div id="google-login" />;
 }

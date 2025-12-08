@@ -1,37 +1,51 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-
+from datetime import date
 from app.core.db import get_db
-from app.schemas.crossword import CrosswordRequest, CrosswordResponse, CrosswordSubmitRequest, CrosswordSubmitResponse
-from app.services.crossword_service import generate_crossword, check_crossword_answers
-
+from app.models.vocabulary import Vocabulary
+from app.services.crossword_service import generate_crossword
+from sqlalchemy import func
 router = APIRouter(prefix="/crossword", tags=["Crossword"])
 
 
-# ------------------------------------------------------------
-#  POST /crossword/generate
-# ------------------------------------------------------------
-@router.post("/generate", response_model=CrosswordResponse)
-def generate_crossword_endpoint(payload: CrosswordRequest, db: Session = Depends(get_db)):
+@router.post("/today")
+def crossword_today(payload: dict, db: Session = Depends(get_db)):
 
-    words = payload.words  # list of word strings
+    limit = payload.get("limit", 10)
 
-    if len(words) < 4:
-        raise HTTPException(400, "Need at least 4 words to generate crossword.")
-
-    grid, placements, clues = generate_crossword(words)
-
-    return CrosswordResponse(
-        grid=grid,
-        placements=placements,
-        clues=clues
+    # random 10 words
+    words = (
+        db.query(Vocabulary)
+        .order_by(func.random())
+        .limit(limit)
+        .all()
     )
 
+    if not words:
+        raise HTTPException(404, "No words found")
 
-# ------------------------------------------------------------
-#  POST /crossword/submit
-# ------------------------------------------------------------
-@router.post("/submit", response_model=CrosswordSubmitResponse)
-def submit_crossword(payload: CrosswordSubmitRequest, db: Session = Depends(get_db)):
-    result = check_crossword_answers(payload)
-    return result
+    formatted = [
+        {
+            "word": w.word.upper(),
+            "clue": w.definition
+        }
+        for w in words
+    ]
+
+    result = generate_crossword(formatted)
+
+    grid = result["grid"]
+    placements = result["placements"]
+
+    clues = []
+    for idx, (w, p) in enumerate(zip(formatted, placements)):
+        clues.append({
+            "number": idx + 1,
+            "direction": p["direction"].lower(),
+            "clue": w["clue"],
+            "answer": w["word"],
+            "row": p["row"],
+            "col": p["col"]
+        })
+
+    return {"grid": grid, "words": clues}
