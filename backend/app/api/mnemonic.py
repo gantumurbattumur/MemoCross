@@ -142,7 +142,10 @@ async def generate_mnemonic(req: MnemonicRequest) -> MnemonicResponse:
     image_base64 = None
     try:
         print(f"🖼️ Generating image in combined endpoint for word: {req.word}")
-        img_model = genai.GenerativeModel("gemini-2.0-flash-exp")
+        try:
+            img_model = genai.GenerativeModel("gemini-2.5-flash")
+        except:
+            img_model = genai.GenerativeModel("gemini-2.0-flash-exp")
         print(f"📝 Image prompt: {prompt_image[:100]}...")
         img_res = img_model.generate_content(prompt_image)
         print(f"✅ Image generation response received")
@@ -342,17 +345,19 @@ async def generate_mnemonic_image(
     image_base64 = None
     try:
         print(f"🖼️ Generating image for word: {req.word}")
-        # Try gemini-2.0-flash-exp first (supports image generation)
-        # If that fails, we'll try other models
+        # Use gemini-2.5-flash as the user confirmed it works locally
         try:
-            img_model = genai.GenerativeModel("gemini-2.0-flash-exp")
+            img_model = genai.GenerativeModel("gemini-2.5-flash")
         except Exception as model_err:
-            print(f"⚠️ Model gemini-2.0-flash-exp not available, trying alternatives: {model_err}")
-            # Fallback to gemini-pro-vision or gemini-1.5-flash
+            print(f"⚠️ Model gemini-2.5-flash not available, trying alternatives: {model_err}")
+            # Fallback options
             try:
-                img_model = genai.GenerativeModel("gemini-1.5-flash")
+                img_model = genai.GenerativeModel("gemini-2.0-flash-exp")
             except:
-                img_model = genai.GenerativeModel("gemini-pro")
+                try:
+                    img_model = genai.GenerativeModel("gemini-1.5-flash")
+                except:
+                    img_model = genai.GenerativeModel("gemini-pro")
         
         print(f"📝 Image prompt: {prompt_image[:100]}...")
         img_res = img_model.generate_content(prompt_image)
@@ -364,22 +369,53 @@ async def generate_mnemonic_image(
             for i, part in enumerate(img_res.parts):
                 print(f"  Part {i}: has inline_data={part.inline_data is not None}")
                 if part.inline_data is not None:
-                    raw_bytes = part.inline_data.data
-                    image_base64 = base64.b64encode(raw_bytes).decode("utf-8")
-                    print(f"✅ Image extracted: {len(image_base64)} chars base64")
-                    break
-            else:
-                print(f"⚠️ No inline_data found in response parts")
-                # Try alternative: check for text containing base64 or other formats
+                    print(f"  Part {i}: mime_type={part.inline_data.mime_type}")
+                    print(f"  Part {i}: data type={type(part.inline_data.data)}, length={len(part.inline_data.data) if part.inline_data.data else 0}")
+                    
+                    # Try different ways to extract the data
+                    if part.inline_data.data:
+                        # Data might be bytes or base64 string
+                        if isinstance(part.inline_data.data, bytes):
+                            raw_bytes = part.inline_data.data
+                            image_base64 = base64.b64encode(raw_bytes).decode("utf-8")
+                            print(f"✅ Image extracted from bytes: {len(image_base64)} chars base64")
+                        elif isinstance(part.inline_data.data, str):
+                            # Already a base64 string or needs encoding
+                            try:
+                                # Try to decode if it's base64, otherwise encode it
+                                base64.b64decode(part.inline_data.data)
+                                image_base64 = part.inline_data.data
+                                print(f"✅ Image extracted from string (already base64): {len(image_base64)} chars")
+                            except:
+                                # Not base64, encode it
+                                image_base64 = base64.b64encode(part.inline_data.data.encode()).decode("utf-8")
+                                print(f"✅ Image extracted from string (encoded): {len(image_base64)} chars base64")
+                        else:
+                            # Try to convert to bytes
+                            raw_bytes = bytes(part.inline_data.data)
+                            image_base64 = base64.b64encode(raw_bytes).decode("utf-8")
+                            print(f"✅ Image extracted (converted to bytes): {len(image_base64)} chars base64")
+                        
+                        if image_base64 and len(image_base64) > 0:
+                            break
+                    
+            if not image_base64 or len(image_base64) == 0:
+                print(f"⚠️ No image data extracted from parts")
+                # Check if response has text (maybe error message)
                 if hasattr(img_res, 'text') and img_res.text:
-                    print(f"📄 Response text: {img_res.text[:200]}")
+                    print(f"📄 Response text: {img_res.text[:500]}")
+                    
+                    # Try to extract base64 from text if it's in the response
+                    import re
+                    base64_match = re.search(r'data:image/[^;]+;base64,([A-Za-z0-9+/=]+)', img_res.text)
+                    if base64_match:
+                        image_base64 = base64_match.group(1)
+                        print(f"✅ Extracted base64 from response text: {len(image_base64)} chars")
         else:
             print(f"⚠️ No parts in response, response: {img_res}")
             
-        if not image_base64:
-            # Gemini models don't generate images - they only analyze them
-            # We need to use a different service for image generation
-            raise ValueError("Image generation not supported by Gemini models. Consider using Imagen API or another image generation service.")
+        if not image_base64 or len(image_base64) == 0:
+            raise ValueError(f"Image generation returned empty data. Response had {len(img_res.parts) if img_res and img_res.parts else 0} parts.")
             
     except (google_exceptions.GoogleAPIError, Exception) as e:
         # Image generation failure - log and raise
