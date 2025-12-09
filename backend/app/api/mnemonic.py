@@ -377,7 +377,9 @@ async def generate_mnemonic_image(
             print(f"⚠️ No parts in response, response: {img_res}")
             
         if not image_base64:
-            raise ValueError("Image generation returned no image data")
+            # Gemini models don't generate images - they only analyze them
+            # We need to use a different service for image generation
+            raise ValueError("Image generation not supported by Gemini models. Consider using Imagen API or another image generation service.")
             
     except (google_exceptions.GoogleAPIError, Exception) as e:
         # Image generation failure - log and raise
@@ -386,9 +388,12 @@ async def generate_mnemonic_image(
         logging.error(error_msg, exc_info=True)
         print(f"❌ {error_msg}")
         print(f"❌ Exception type: {type(e).__name__}")
+        print(f"❌ Full traceback:")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=503,
-            detail=error_msg
+            detail=f"Image generation is currently unavailable. Gemini models analyze images but don't generate them. {str(e)}"
         )
     
     # Update cache with image
