@@ -16,6 +16,7 @@ function LearnPageContent() {
   const [selectedLevel, setSelectedLevel] = useState<Level>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [wordsReady, setWordsReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const generatingRef = useRef(false);
   const initialWordsRef = useRef<any[]>([]);
   const searchParams = useSearchParams();
