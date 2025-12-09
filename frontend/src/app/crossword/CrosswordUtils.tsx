@@ -25,7 +25,7 @@ function findOverlapPosition(
   grid: string[][],
   existing: PlacedWord,
   newWord: string
-) {
+): { row: number; col: number; direction: "across" | "down"; match: boolean } | null {
   for (let i = 0; i < existing.word.length; i++) {
     for (let j = 0; j < newWord.length; j++) {
       if (existing.word[i] === newWord[j]) {
@@ -36,12 +36,12 @@ function findOverlapPosition(
           // place new word vertically
           row = existing.row - j;
           col = existing.col + i;
-          return { row, col, direction: "down", match: true };
+          return { row, col, direction: "down" as const, match: true };
         } else {
           // place new word horizontally
           row = existing.row + i;
           col = existing.col - j;
-          return { row, col, direction: "across", match: true };
+          return { row, col, direction: "across" as const, match: true };
         }
       }
     }
