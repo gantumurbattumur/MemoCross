@@ -66,14 +66,19 @@ def get_daily_words(
     """
     # Extract level from request body or use default
     level = request.level if request.level else "a1"
+    limit = request.limit if request.limit else 10
+    
+    print(f"📥 /words/daily request: level={level}, limit={limit}, user={user is not None}")
     
     today = date.today()
     
     # Not logged in -> just return random words filtered by level (limit to 10)
     if user is None:
-        words = get_random_words(db, limit=10, level=level)
-        # Ensure we only return 10 words
-        words = words[:10]
+        print(f"👤 Guest mode: fetching {limit} words at level {level}")
+        words = get_random_words(db, limit=limit, level=level)
+        # Ensure we only return requested limit
+        words = words[:limit]
+        print(f"✅ Found {len(words)} words in database")
         return DailyWordsResponse(
             date=today.isoformat(),
             count=len(words),
