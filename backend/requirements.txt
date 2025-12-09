@@ -26,5 +26,6 @@ google-generativeai>=0.3.2
 # --- Optional utilities your code uses ---
 python-dateutil>=2.8.2
 
-python-jose 
+python-jose[cryptography]
+PyJWT>=2.8.0
 google-auth
