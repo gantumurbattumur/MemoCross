@@ -55,6 +55,10 @@ function LearnPageContent() {
 
     const loadData = async () => {
       try {
+        const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        console.log("API URL:", API_BASE_URL);
+        console.log("Request:", { level: selectedLevel, limit: 10 });
+        
         const data = await api("/words/daily", {
           method: "POST",
           body: JSON.stringify({
@@ -63,9 +67,12 @@ function LearnPageContent() {
           }),
         });
 
+        console.log("API Response:", data);
+        
         // backend returns DailyWordsResponse with { date, count, words }
         // Extract the words array from the response
         const wordsData = data?.words || [];
+        console.log("Words data:", wordsData.length, "words");
         setWords(wordsData);
         
         // Store initial words for reference
@@ -75,8 +82,10 @@ function LearnPageContent() {
         localStorage.setItem("flashcard_words", JSON.stringify(wordsData));
         
         setWordsReady(true);
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error loading daily words:", err);
+        console.error("Error details:", err.message);
+        setError(err.message || "Failed to load words");
         setWords([]);
         setWordsReady(false);
       } finally {
