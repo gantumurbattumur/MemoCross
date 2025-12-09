@@ -31,15 +31,29 @@ def get_random_words(db: Session, limit: int = 10, level: Optional[str] = None) 
     if level:
         query = query.filter(Vocabulary.level == level)
     
+    # Check total count for debugging
+    total_count = query.count()
+    print(f"🔍 Database query: level={level}, total words matching={total_count}")
+    
+    if total_count == 0:
+        print(f"⚠️ WARNING: No words found with level={level}")
+        # Try without level filter to see if any words exist
+        all_count = db.query(Vocabulary).count()
+        print(f"🔍 Total words in database (all levels): {all_count}")
+        return []
+    
     # Try PostgreSQL/SQLite random(), fallback to Python random if needed
     try:
-        return (
+        words = (
             query
             .order_by(func.random())
             .limit(limit)
             .all()
         )
-    except Exception:
+        print(f"✅ Retrieved {len(words)} words from database")
+        return words
+    except Exception as e:
+        print(f"❌ Error in get_random_words: {e}")
         # Fallback: get all and shuffle in Python (not ideal for large datasets)
         import random
         all_words = query.all()
