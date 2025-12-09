@@ -153,12 +153,32 @@ async def generate_mnemonic(req: MnemonicRequest) -> MnemonicResponse:
         # Extract raw bytes from inline_data
         if img_res and img_res.parts:
             print(f"📦 Checking {len(img_res.parts)} parts for image data")
-            for part in img_res.parts:
+            for i, part in enumerate(img_res.parts):
+                print(f"  Part {i}: has inline_data={part.inline_data is not None}")
                 if part.inline_data is not None:
-                    raw_bytes = part.inline_data.data
-                    image_base64 = base64.b64encode(raw_bytes).decode("utf-8")
-                    print(f"✅ Image extracted: {len(image_base64)} chars base64")
-                    break
+                    print(f"  Part {i}: mime_type={part.inline_data.mime_type}")
+                    print(f"  Part {i}: data type={type(part.inline_data.data)}, length={len(part.inline_data.data) if part.inline_data.data else 0}")
+                    
+                    if part.inline_data.data:
+                        if isinstance(part.inline_data.data, bytes):
+                            raw_bytes = part.inline_data.data
+                            image_base64 = base64.b64encode(raw_bytes).decode("utf-8")
+                            print(f"✅ Image extracted from bytes: {len(image_base64)} chars base64")
+                        elif isinstance(part.inline_data.data, str):
+                            try:
+                                base64.b64decode(part.inline_data.data)
+                                image_base64 = part.inline_data.data
+                                print(f"✅ Image extracted from string (already base64): {len(image_base64)} chars")
+                            except:
+                                image_base64 = base64.b64encode(part.inline_data.data.encode()).decode("utf-8")
+                                print(f"✅ Image extracted from string (encoded): {len(image_base64)} chars base64")
+                        else:
+                            raw_bytes = bytes(part.inline_data.data)
+                            image_base64 = base64.b64encode(raw_bytes).decode("utf-8")
+                            print(f"✅ Image extracted (converted to bytes): {len(image_base64)} chars base64")
+                        
+                        if image_base64 and len(image_base64) > 0:
+                            break
             else:
                 print(f"⚠️ No inline_data found in response parts")
                 if hasattr(img_res, 'text') and img_res.text:
