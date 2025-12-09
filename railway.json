@@ -1,5 +1,6 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
+  "$comment": "IMPORTANT: Set Root Directory to 'backend' in Railway service settings",
   "build": {
     "builder": "NIXPACKS",
     "buildCommand": "pip install -r requirements.txt && alembic upgrade head"
