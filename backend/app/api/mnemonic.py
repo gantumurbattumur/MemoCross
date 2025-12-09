@@ -19,7 +19,7 @@ API_KEY = os.getenv("GEMINI_API_KEY")
 if API_KEY is None:
     raise RuntimeError("GEMINI_API_KEY environment variable is not set")
 
-client = genai.Client(api_key=API_KEY)
+genai.configure(api_key=API_KEY)
 
 router = APIRouter(prefix="/mnemonic", tags=["Mnemonic"])
 
@@ -95,7 +95,8 @@ async def generate_mnemonic(req: MnemonicRequest) -> MnemonicResponse:
     """
 
     try:
-        text_res = client.models.generate_content(
+        model = genai.GenerativeModel("gemini-2.5-flash")
+        text_res = model.generate_content(
             model="gemini-2.5-flash",
             contents=[prompt_text]
         )
@@ -143,10 +144,8 @@ async def generate_mnemonic(req: MnemonicRequest) -> MnemonicResponse:
 
     image_base64 = None
     try:
-        img_res = client.models.generate_content(
-            model="gemini-2.5-flash-image",
-            contents=[prompt_image],
-        )
+        img_model = genai.GenerativeModel("gemini-2.5-flash-image")
+        img_res = img_model.generate_content(prompt_image)
 
         # Extract raw bytes from inline_data
         if img_res and img_res.parts:
@@ -216,7 +215,8 @@ async def generate_mnemonic_text(
     """
 
     try:
-        text_res = client.models.generate_content(
+        model = genai.GenerativeModel("gemini-2.5-flash")
+        text_res = model.generate_content(
             model="gemini-2.5-flash",
             contents=[prompt_text]
         )
@@ -333,10 +333,8 @@ async def generate_mnemonic_image(
 
     image_base64 = None
     try:
-        img_res = client.models.generate_content(
-            model="gemini-2.5-flash-image",
-            contents=[prompt_image],
-        )
+        img_model = genai.GenerativeModel("gemini-2.5-flash-image")
+        img_res = img_model.generate_content(prompt_image)
 
         # Extract raw bytes from inline_data
         if img_res and img_res.parts:
