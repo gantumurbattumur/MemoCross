@@ -143,9 +143,12 @@ async def generate_mnemonic(req: MnemonicRequest) -> MnemonicResponse:
     try:
         print(f"🖼️ Generating image in combined endpoint for word: {req.word}")
         try:
-            img_model = genai.GenerativeModel("gemini-2.5-flash")
+            img_model = genai.GenerativeModel("gemini-2.5-flash-image")
         except:
-            img_model = genai.GenerativeModel("gemini-2.0-flash-exp")
+            try:
+                img_model = genai.GenerativeModel("gemini-2.0-flash-exp")
+            except:
+                img_model = genai.GenerativeModel("gemini-2.5-flash")
         print(f"📝 Image prompt: {prompt_image[:100]}...")
         img_res = img_model.generate_content(prompt_image)
         print(f"✅ Image generation response received")
@@ -365,11 +368,11 @@ async def generate_mnemonic_image(
     image_base64 = None
     try:
         print(f"🖼️ Generating image for word: {req.word}")
-        # Use gemini-2.5-flash as the user confirmed it works locally
+        # Use gemini-2.5-flash-image for image generation (official Google model)
         try:
-            img_model = genai.GenerativeModel("gemini-2.5-flash")
+            img_model = genai.GenerativeModel("gemini-2.5-flash-image")
         except Exception as model_err:
-            print(f"⚠️ Model gemini-2.5-flash not available, trying alternatives: {model_err}")
+            print(f"⚠️ Model gemini-2.5-flash-image not available, trying alternatives: {model_err}")
             # Fallback options
             try:
                 img_model = genai.GenerativeModel("gemini-2.0-flash-exp")
