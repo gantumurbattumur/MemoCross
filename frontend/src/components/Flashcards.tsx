@@ -331,7 +331,7 @@ export default function Flashcards({ words, language, onIndexChange, currentInde
   };
 
   return (
-    <div className="flex flex-col items-center gap-4 w-full">
+    <div className="flex flex-col items-center gap-4 w-full animate-fadeIn">
       {error && <ErrorToast message={error} onClose={() => setError(null)} />}
       {/* ===== CARD WRAPPER (handles 3D flip) ===== */}
       <div
@@ -345,7 +345,7 @@ export default function Flashcards({ words, language, onIndexChange, currentInde
         >
           {/* ===== FRONT ===== */}
           <div
-            className="absolute inset-0 bg-white rounded-2xl shadow-xl px-8 py-10 md:px-10 md:py-12 lg:px-12 lg:py-14 xl:px-14 xl:py-16 2xl:px-16 2xl:py-[72px] flex flex-col items-center justify-center backface-hidden overflow-hidden"
+            className="absolute inset-0 bg-white dark:bg-slate-700 rounded-2xl shadow-2xl px-8 py-10 md:px-10 md:py-12 lg:px-12 lg:py-14 xl:px-14 xl:py-16 2xl:px-16 2xl:py-[72px] flex flex-col items-center justify-center backface-hidden overflow-hidden border border-gray-100 dark:border-slate-600"
           >
             {/* Spanish/French Section - Top Half */}
             <div className="flex flex-col items-center mb-6 pb-6 border-b-4 border-rose-200 dark:border-rose-700 w-full">
@@ -402,47 +402,59 @@ export default function Flashcards({ words, language, onIndexChange, currentInde
 
           {/* ===== BACK ===== */}
           <div
-            className="absolute inset-0 bg-white rounded-2xl shadow-xl px-8 py-8 md:px-10 md:py-10 lg:px-12 lg:py-12 xl:px-14 xl:py-14 2xl:px-16 2xl:py-16 flex flex-col items-center justify-center rotate-y-180 backface-hidden overflow-hidden"
+            className="absolute inset-0 bg-gradient-to-br from-rose-50 to-pink-50 dark:from-slate-700 dark:to-slate-800 rounded-2xl shadow-2xl px-8 py-8 md:px-10 md:py-10 lg:px-12 lg:py-12 xl:px-14 xl:py-14 2xl:px-16 2xl:py-16 flex flex-col items-center justify-center rotate-y-180 backface-hidden overflow-hidden border border-rose-200 dark:border-slate-600"
           >
-            {/* Translated word with pronunciation guide */}
+            {/* Translated word with pronunciation guide - Reduced size */}
             {translation && (
-              <div className="w-full flex items-center justify-between mb-4">
-                <p className="text-5xl md:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl font-extrabold text-rose-600 dark:text-rose-400">
+              <div className="w-full flex items-center justify-between mb-2">
+                <p className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-extrabold text-rose-600 dark:text-rose-400">
                   {translation}
                 </p>
-                <p className="text-xs md:text-sm lg:text-base text-gray-500 dark:text-gray-400 font-medium">
+                <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 font-medium">
                   {getPronunciation(translation, language)}
                 </p>
               </div>
             )}
 
-            {/* Sound-a-like word */}
+            {/* Sound-a-like word - Compact */}
             {card.mnemonic_word && (
-              <div className="mb-4 w-full">
-                <p className="text-gray-700 dark:text-gray-300 text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl text-center">
-                  <span className="font-semibold">Sound-a-like:</span>{" "}
-                  <span className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-bold text-rose-600 dark:text-rose-400">
-                    "{card.mnemonic_word}"
-                  </span>
+              <div className="mb-3 w-full bg-white/60 dark:bg-slate-800/60 rounded-lg p-2 md:p-3 border-2 border-rose-300 dark:border-rose-600 shadow-md animate-scaleIn">
+                <div className="flex items-center justify-center gap-1.5 mb-1">
+                  <span className="text-lg">🧠</span>
+                  <p className="text-xs font-bold text-rose-700 dark:text-rose-300 uppercase tracking-wider">
+                    Memory Technique
+                  </p>
+                </div>
+                <p className="text-gray-800 dark:text-gray-200 text-xs md:text-sm text-center mb-1">
+                  <span className="font-semibold text-gray-600 dark:text-gray-400">Sound-a-like:</span>
+                </p>
+                <p className="text-xl md:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl font-bold text-rose-600 dark:text-rose-400 text-center">
+                  "{card.mnemonic_word}"
                 </p>
               </div>
             )}
 
-            {/* Mnemonic sentence above image */}
+            {/* Mnemonic sentence - Compact */}
             {card.mnemonic_sentence && (
-              <p className="text-center text-gray-700 dark:text-gray-300 text-sm md:text-base lg:text-lg xl:text-xl 2xl:text-2xl max-w-[400px] md:max-w-[500px] lg:max-w-[600px] xl:max-w-[700px] 2xl:max-w-[800px] leading-relaxed mb-4">
-                {card.mnemonic_sentence}
-              </p>
+              <div className="text-center mb-2 max-w-[400px] md:max-w-[500px] lg:max-w-[600px] xl:max-w-[700px] 2xl:max-w-[800px]">
+                <p className="text-gray-800 dark:text-gray-100 text-sm md:text-base lg:text-lg xl:text-xl 2xl:text-2xl leading-tight font-medium">
+                  {card.mnemonic_sentence}
+                </p>
+              </div>
             )}
 
-            {/* Large Image - Fills most of the space */}
+            {/* Visual Memory Aid Badge - Removed to save space */}
+
+            {/* Large Image - Takes up remaining space */}
             {card.image_url ? (
-              <div className="flex-1 w-full flex items-center justify-center mb-3 min-h-0">
-                <img
-                  src={card.image_url}
-                  className="w-full h-full max-w-full max-h-[420px] md:max-h-[500px] lg:max-h-[600px] xl:max-h-[700px] 2xl:max-h-[800px] object-contain rounded-xl shadow image-fade-in"
-                  alt="Sound-a-like word illustration"
-                />
+              <div className="flex-1 w-full flex items-center justify-center mb-2 min-h-0 overflow-hidden">
+                <div className="relative group w-full h-full">
+                  <img
+                    src={card.image_url}
+                    className="w-full h-full max-w-full max-h-[500px] md:max-h-[600px] lg:max-h-[700px] xl:max-h-[800px] 2xl:max-h-[900px] object-contain rounded-xl shadow-xl border-2 border-rose-200 dark:border-rose-800 image-fade-in"
+                    alt="Visual memory aid illustration"
+                  />
+                </div>
               </div>
             ) : generatingImage ? (
               <div className="flex-1 w-full flex flex-col items-center justify-center mb-3 min-h-0 bg-gradient-to-br from-gray-50 to-rose-50 dark:from-gray-800 dark:to-rose-900/20 rounded-xl border-2 border-dashed border-rose-300 dark:border-rose-600">
@@ -490,26 +502,34 @@ export function FlashcardNavigation({
       <button
         onClick={onPrev}
         disabled={index === 0}
-        className="px-6 py-3 bg-pink-200 dark:bg-pink-300 text-gray-900 dark:text-gray-900 rounded-xl shadow-md hover:bg-pink-300 dark:hover:bg-pink-400 border border-pink-300 dark:border-pink-400 disabled:opacity-40 disabled:cursor-not-allowed font-semibold transition-all"
+        className="px-6 py-3 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-300 rounded-xl shadow-md hover:bg-gray-200 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600 disabled:opacity-40 disabled:cursor-not-allowed font-semibold transition-all transform hover:scale-105 disabled:hover:scale-100"
       >
         ◀ Prev
       </button>
 
-      <span className="text-gray-800 dark:text-gray-200 font-bold text-lg min-w-[80px] text-center">
-        {index + 1} / {total}
-      </span>
+      <div className="flex flex-col items-center">
+        <span className="text-gray-800 dark:text-gray-200 font-bold text-lg min-w-[80px] text-center">
+          {index + 1} / {total}
+        </span>
+        <div className="w-24 h-1 bg-gray-200 dark:bg-slate-700 rounded-full mt-1 overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-rose-500 to-pink-500 transition-all duration-300"
+            style={{ width: `${((index + 1) / total) * 100}%` }}
+          />
+        </div>
+      </div>
 
       {isLast ? (
         <button
           onClick={onCrossword}
-          className="px-6 py-3 bg-pink-200 dark:bg-pink-300 text-gray-900 dark:text-gray-900 rounded-xl shadow-md hover:bg-pink-300 dark:hover:bg-pink-400 border border-pink-300 dark:border-pink-400 font-semibold transition-all"
+          className="px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-xl shadow-lg hover:shadow-xl border border-rose-400 dark:border-rose-500 font-bold transition-all transform hover:scale-105"
         >
-          Crossword →
+          🧩 Crossword →
         </button>
       ) : (
         <button
           onClick={onNext}
-          className="px-6 py-3 bg-pink-200 dark:bg-pink-300 text-gray-900 dark:text-gray-900 rounded-xl shadow-md hover:bg-pink-300 dark:hover:bg-pink-400 border border-pink-300 dark:border-pink-400 font-semibold transition-all"
+          className="px-6 py-3 bg-gradient-to-r from-rose-500 to-pink-500 text-white rounded-xl shadow-lg hover:shadow-xl border border-rose-400 dark:border-rose-500 font-bold transition-all transform hover:scale-105"
         >
           Next ▶
         </button>

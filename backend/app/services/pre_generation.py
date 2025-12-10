@@ -1,6 +1,9 @@
 """
-Service for pre-generating mnemonics for the first 3 words of each language/level combination.
+Service for pre-generating mnemonics for the first 10 words of each language/level combination.
 This ensures fast loading for visitors.
+
+Note: Currently set to 10 words for better initial UX. After first week, consider reducing to 3
+words to save on API costs while still providing good experience.
 """
 import hashlib
 from datetime import date
@@ -167,7 +170,8 @@ async def pre_generate_for_combination(
     level: str
 ) -> dict:
     """
-    Pre-generate mnemonics for the first 3 words of a language/level combination.
+    Pre-generate mnemonics for the first 10 words of a language/level combination.
+    (Increased from 3 for better initial UX - can reduce back to 3 after first week to save costs)
     
     Returns:
         Dict with stats about what was generated
@@ -175,7 +179,9 @@ async def pre_generate_for_combination(
     print(f"🔄 Pre-generating for {language}/{level}...")
     
     # Get deterministic words
-    words = get_deterministic_words(db, language, level, limit=3)
+    # Pre-generate first 10 words (increased from 3 for better initial UX)
+    # TODO: After first week, reduce back to 3 to save costs
+    words = get_deterministic_words(db, language, level, limit=10)
     
     if not words:
         print(f"⚠️ No words found for {language}/{level}")

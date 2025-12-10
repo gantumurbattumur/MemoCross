@@ -26,15 +26,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         document.documentElement.classList.remove("dark");
       }
     } else {
-      // Check system preference
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      const initialTheme = prefersDark ? "dark" : "light";
-      setTheme(initialTheme);
-      if (initialTheme === "dark") {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
+      // Default to light mode (not using system preference)
+      setTheme("light");
+      document.documentElement.classList.remove("dark");
     }
     setMounted(true);
   }, []);

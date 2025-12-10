@@ -96,35 +96,27 @@ def get_daily_words(
         # (the mnemonics are language-specific, but the English words are the same)
         from app.services.pre_generation import get_deterministic_words
         
-        # Use 'es' for deterministic selection (words are same, mnemonics differ by language)
-        deterministic_words = get_deterministic_words(db, "es", level, limit=3)
+        # Use deterministic selection (words are same, mnemonics differ by language)
+        # Pre-generate 10 words for better UX (can reduce to 3 later to save costs)
+        deterministic_words = get_deterministic_words(db, "es", level, limit=10)
         print(f"📌 Deterministic words for level {level}: {[w.word for w in deterministic_words]}")
         
-        if len(deterministic_words) < 3:
+        # Use deterministic words directly (we now pre-generate 10 words)
+        # This ensures all 10 words have pre-generated mnemonics for instant loading
+        words = deterministic_words[:limit] if len(deterministic_words) >= limit else deterministic_words
+        
+        # If we don't have enough deterministic words, fill with random (fallback)
+        if len(words) < limit:
             print(f"⚠️ Warning: Only got {len(deterministic_words)} deterministic words, filling with random")
-            # Fallback to random if deterministic fails
-            words = get_random_words(db, limit=limit, level=level)
-        else:
-            # Get random words for the rest (words 4-10)
-            remaining_needed = max(0, limit - len(deterministic_words))
-            
-            if remaining_needed > 0:
-                # Get extra random words to avoid duplicates
-                random_words = get_random_words(db, limit=remaining_needed + 20, level=level)
-                
-                # Remove duplicates (in case deterministic words appear in random)
-                deterministic_ids = {w.id for w in deterministic_words}
-                random_words = [w for w in random_words if w.id not in deterministic_ids]
-                
-                # Combine: deterministic first, then random
-                words = deterministic_words + random_words[:remaining_needed]
-            else:
-                words = deterministic_words
-            
+            remaining_needed = limit - len(words)
+            random_words = get_random_words(db, limit=remaining_needed + 20, level=level)
+            deterministic_ids = {w.id for w in deterministic_words}
+            random_words = [w for w in random_words if w.id not in deterministic_ids]
+            words.extend(random_words[:remaining_needed])
             words = words[:limit]
         
         print(f"✅ Found {len(words)} words in database ({len(deterministic_words)} deterministic)")
-        print(f"   First 3 words: {[w.word for w in words[:3]]}")
+        print(f"   First 10 words: {[w.word for w in words[:10]]}")
         
         return DailyWordsResponse(
             date=today.isoformat(),
@@ -153,31 +145,26 @@ def get_daily_words(
             )
         # If we have some words but not enough, we'll generate new ones below
 
-    # For authenticated users, also use deterministic words for first 3
-    # This ensures they get pre-generated mnemonics too
+    # For authenticated users, use deterministic words for first 10
+    # This ensures they get pre-generated mnemonics for instant loading
     from app.services.pre_generation import get_deterministic_words
     
-    print(f"👤 Authenticated user: using deterministic words for first 3")
-    deterministic_words = get_deterministic_words(db, "es", level, limit=3)
+    print(f"👤 Authenticated user: using deterministic words for first 10")
+    deterministic_words = get_deterministic_words(db, "es", level, limit=10)
     print(f"📌 Deterministic words for level {level}: {[w.word for w in deterministic_words]}")
     
-    # Get remaining random words
-    remaining_needed = max(0, limit - len(deterministic_words))
+    # Use deterministic words directly (we now pre-generate 10 words)
+    # This ensures all words have pre-generated mnemonics
+    words = deterministic_words[:limit] if len(deterministic_words) >= limit else deterministic_words
     
-    if remaining_needed > 0:
-        # Get random words for the rest
+    # Fallback: if we don't have enough, fill with random
+    if len(words) < limit:
+        remaining_needed = limit - len(words)
         random_words = get_random_words(db, limit=remaining_needed + 20, level=level)
-        
-        # Remove duplicates
         deterministic_ids = {w.id for w in deterministic_words}
         random_words = [w for w in random_words if w.id not in deterministic_ids]
-        
-        # Combine: deterministic first, then random
-        words = deterministic_words + random_words[:remaining_needed]
-    else:
-        words = deterministic_words
-    
-    words = words[:limit]
+        words.extend(random_words[:remaining_needed])
+        words = words[:limit]
     
     # Save these words to user history
     entries = []
