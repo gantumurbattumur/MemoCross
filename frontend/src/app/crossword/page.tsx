@@ -172,7 +172,7 @@ export default function CrosswordPage() {
     return (
       <div className="min-h-screen flex bg-white dark:bg-slate-800">
         <Sidebar />
-        <div className="flex-1 ml-64 flex items-center justify-center">
+        <div className="flex-1 lg:ml-64 flex items-center justify-center pt-16 lg:pt-0">
           <div className="text-center">
             <p className="text-gray-600 dark:text-gray-300 text-lg">Loading crossword…</p>
           </div>
@@ -185,7 +185,7 @@ export default function CrosswordPage() {
     return (
       <div className="min-h-screen flex bg-white dark:bg-slate-800">
         <Sidebar />
-        <div className="flex-1 ml-64 flex items-center justify-center">
+        <div className="flex-1 lg:ml-64 flex items-center justify-center pt-16 lg:pt-0">
           <div className="text-center bg-white dark:bg-slate-700 rounded-2xl shadow-xl p-8 border border-gray-200 dark:border-slate-600">
             <p className="text-red-600 dark:text-red-400 mb-4 text-lg">{error}</p>
             <button
@@ -204,7 +204,7 @@ export default function CrosswordPage() {
     return (
       <div className="min-h-screen flex bg-white dark:bg-slate-800">
         <Sidebar />
-        <div className="flex-1 ml-64 flex items-center justify-center">
+        <div className="flex-1 lg:ml-64 flex items-center justify-center pt-16 lg:pt-0">
           <div className="text-center bg-white dark:bg-slate-700 rounded-2xl shadow-xl p-8 border border-gray-200 dark:border-slate-600">
             <p className="text-gray-600 dark:text-gray-300 text-lg">No crossword data available</p>
           </div>
