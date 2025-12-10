@@ -153,12 +153,48 @@ def get_daily_words(
             )
         # If we have some words but not enough, we'll generate new ones below
 
-    # Generate new words with specified level - limit to 10
-    words = assign_daily_words(db, user_id, level=level, limit=10)
+    # For authenticated users, also use deterministic words for first 3
+    # This ensures they get pre-generated mnemonics too
+    from app.services.pre_generation import get_deterministic_words
+    
+    print(f"👤 Authenticated user: using deterministic words for first 3")
+    deterministic_words = get_deterministic_words(db, "es", level, limit=3)
+    print(f"📌 Deterministic words for level {level}: {[w.word for w in deterministic_words]}")
+    
+    # Get remaining random words
+    remaining_needed = max(0, limit - len(deterministic_words))
+    
+    if remaining_needed > 0:
+        # Get random words for the rest
+        random_words = get_random_words(db, limit=remaining_needed + 20, level=level)
+        
+        # Remove duplicates
+        deterministic_ids = {w.id for w in deterministic_words}
+        random_words = [w for w in random_words if w.id not in deterministic_ids]
+        
+        # Combine: deterministic first, then random
+        words = deterministic_words + random_words[:remaining_needed]
+    else:
+        words = deterministic_words
+    
+    words = words[:limit]
+    
+    # Save these words to user history
+    entries = []
+    for w in words:
+        entries.append(
+            UserWordHistory(
+                user_id=user_id,
+                word_id=w.id,
+                served_date=today,
+                completed=False
+            )
+        )
+    
+    db.add_all(entries)
     db.commit()
     
-    # Ensure we only return 10 words
-    words = words[:10]
+    print(f"✅ Found {len(words)} words for authenticated user ({len(deterministic_words)} deterministic)")
 
     return DailyWordsResponse(
         date=today.isoformat(),
